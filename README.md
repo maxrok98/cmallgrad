@@ -1,0 +1,2 @@
+# cmallgrad
+Micrograd in C
