@@ -1,2 +1,2 @@
 # cmallgrad
-Micrograd in C
+Trying to recreate [micrograd](https://github.com/karpathy/micrograd/) in C.
