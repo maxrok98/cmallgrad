@@ -6,6 +6,7 @@
 typedef enum Op {
 	// un op
 	OP_NEG,
+	OP_TANH,
 	UNARY_LAST,
 
   // bin op
@@ -17,8 +18,9 @@ typedef enum Op {
 } Op;
 
 typedef struct Value {
-	float data;
-	float grad;
+	double data;
+	double grad;
+	double local_derivative;
 	struct Value* prev[2];
 	Op op;
 
@@ -27,12 +29,14 @@ typedef struct Value {
 	bool leaf;
 } Value;
 
-Value* value(float val);
+bool unary(Op op);
+Value* value(double val);
 Value* add(Value* val1, Value* val2);
 Value* min(Value* val1, Value* val2);
 Value* mul(Value* val1, Value* val2);
 Value* dv(Value* val1, Value* val2);
-bool unary(Op op);
-char* op_to_str(Op op);
+Value* tnh(Value* val1);
+
+void backward(Value* val);
 
 #endif

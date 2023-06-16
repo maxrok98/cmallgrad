@@ -5,6 +5,19 @@
 
 #include "engine.h"
 
+char* OpStr[OP_LAST] = {
+	[OP_NEG] = "-",
+	[OP_TANH] = "tanh",
+	[OP_ADD] = "+",
+	[OP_MIN] = "-",
+	[OP_MUL] = "*",
+	[OP_DIV] = "/"
+};
+
+char* op_to_str(Op op) {
+	return OpStr[op];
+}
+
 void draw(Value* val, int depth, bool first_parent, bool pipes[]) {
 	for(int i = 0; i < depth; i++) {
 		pipes[i]
@@ -17,8 +30,9 @@ void draw(Value* val, int depth, bool first_parent, bool pipes[]) {
 	char* op = val->leaf ? "" : op_to_str(val->op);
 	char* name = val->name ? val->name : "";
 
-	val->data < 0 ? printf("%s%.3f %s %s\n", pref, val->data, op, val->name)
-		: printf("%s%.4f %s %s\n", pref, val->data, op, val->name);
+	val->data < 0 
+		? printf("%s%.3f %s %s | grad - %.4f\n", pref, val->data, op, name, val->grad)
+		: printf("%s%.4f %s %s | grad - %.4f\n", pref, val->data, op, name, val->grad);
 
 	bool* new_pipes = (bool*)malloc(sizeof(bool)*(depth+2));
 	memcpy(new_pipes, pipes, depth+1);
