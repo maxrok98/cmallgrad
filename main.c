@@ -11,6 +11,8 @@ void neuron() {
 	Value* x1 = value(2); x1->name = "x1";
 	Value* x2 = value(0); x2->name = "x2";
 
+	Value* y1 = value(1); y1->name = "y1";
+
 	Value* w1 = value(-3); w1->name = "w1";
 	Value* w2 = value(1); w2->name = "w2";
 
@@ -25,12 +27,14 @@ void neuron() {
 
 	Value* o = tnh(n);
 
+	Value* loss = pw(sub(o, y1), value(2));
+
 	bool pipes[1] = {false};
-	draw(o, 0, false, pipes);
+	draw(loss, 0, false, pipes);
 
-	backward(o);
+	backward(loss);
 
-	draw(o, 0, false, pipes);
+	draw(loss, 0, false, pipes);
 }
 
 void equation() {

@@ -11,9 +11,10 @@ typedef enum Op {
 
   // bin op
 	OP_ADD,
-	OP_MIN,
+	OP_SUB,
 	OP_MUL,
 	OP_DIV,
+	OP_POW,
 	OP_LAST
 } Op;
 
@@ -44,9 +45,10 @@ typedef struct ValueList {
 bool unary(Op op);
 Value* value(double val);
 Value* add(Value* val1, Value* val2);
-Value* min(Value* val1, Value* val2);
+Value* sub(Value* val1, Value* val2);
 Value* mul(Value* val1, Value* val2);
 Value* dv(Value* val1, Value* val2);
+Value* pw(Value* val1, Value* val2);
 Value* tnh(Value* val1);
 Value* neg(Value* val1);
 

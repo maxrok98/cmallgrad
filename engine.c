@@ -6,18 +6,18 @@
 void tnh_derivative(Value* val1, Value* out);
 
 void add_derivative(Value* val1, Value* val2, Value* out);
-void min_derivative(Value* val1, Value* val2, Value* out);
+void sub_derivative(Value* val1, Value* val2, Value* out);
 void mul_derivative(Value* val1, Value* val2, Value* out);
 void div_derivative(Value* val1, Value* val2, Value* out);
+void pw_derivative(Value* val1, Value* val2, Value* out);
 
 void (*unary_derivative[UNARY_LAST])(Value*, Value*) = {
 	[OP_TANH] = tnh_derivative
 };
 void (*binary_derivative[OP_LAST])(Value*, Value*, Value*) = {
 	[OP_ADD] = add_derivative,
-	[OP_MIN] = min_derivative,
 	[OP_MUL] = mul_derivative,
-	[OP_DIV] = div_derivative
+	[OP_POW] = pw_derivative
 };
 
 bool unary(Op op) {
@@ -70,7 +70,7 @@ void add_derivative(Value* val1, Value* val2, Value* out) {
 
 Value* min(Value* val1, Value* val2) {
 	Value* out = value(val1->data - val2->data);
-	set_binary_op(val1, val2, out, OP_MIN);
+	set_binary_op(val1, val2, out, OP_SUB);
 
 	return out;
 }
@@ -92,17 +92,7 @@ void mul_derivative(Value* val1, Value* val2, Value* out) {
 	val2->local_derivative = val1->data;
 }
 
-Value* dv(Value* val1, Value* val2) {
-	Value* out = value(val1->data / val2->data);
-	set_binary_op(val1, val2, out, OP_DIV);
-
-	return out;
-}
-
-void div_derivative(Value* val1, Value* val2, Value* out) {
-	// not implemented
-}
-
+// tanh
 Value* tnh(Value* val1) {
 	Value* out = value(tanh(val1->data));
 	set_unary_op(val1, out, OP_TANH);
@@ -113,6 +103,34 @@ Value* tnh(Value* val1) {
 void tnh_derivative(Value* val1, Value* out) {
 	val1->local_derivative = (1 - pow(out->data,2));
 }
+
+// pow
+Value* pw(Value* val1, Value* val2) {
+	Value* out = value(pow(val1->data, val2->data));
+	set_binary_op(val1, val2, out, OP_POW);
+
+	return out;
+}
+
+void pw_derivative(Value* val1, Value* val2, Value* out) {
+	val1->local_derivative = val2->data * pow(val1->data, (val2->data - 1)) * out->data;
+}
+
+// following operation described in terms of higher ones
+// hence they do not need derivative func
+
+Value* neg(Value* val1) {
+	return mul(val1, value(-1));
+}
+
+Value* sub(Value* val1, Value* val2) {
+	return add(val1, neg(val2));
+}
+
+Value* dv(Value* val1, Value* val2) {
+	return mul(val1, pw(val2, value(-1)));
+}
+
 
 ValueList* init_list() {
 	ValueList* list = (ValueList*)malloc(sizeof(ValueList));

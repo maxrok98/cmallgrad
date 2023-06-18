@@ -8,10 +8,12 @@
 char* OpStr[OP_LAST] = {
 	[OP_NEG] = "-",
 	[OP_TANH] = "tanh",
+
 	[OP_ADD] = "+",
-	[OP_MIN] = "-",
+	[OP_SUB] = "-",
 	[OP_MUL] = "*",
-	[OP_DIV] = "/"
+	[OP_DIV] = "/",
+	[OP_POW] = "**"
 };
 
 char* op_to_str(Op op) {
