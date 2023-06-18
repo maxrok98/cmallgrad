@@ -37,6 +37,8 @@ void set_unary_op(Value* val1, Value* out, Op op) {
 
 	out->prev[0] = val1;
 
+	val1->out = out;
+
 	out->op = op;
 	out->leaf = false;
 }
@@ -46,6 +48,9 @@ void set_binary_op(Value* val1, Value* val2, Value* out, Op op) {
 
 	out->prev[0] = val1;
 	out->prev[1] = val2;
+
+	val1->out = out;
+	val2->out = out;
 
 	out->op = op;
 	out->leaf = false;
@@ -109,26 +114,65 @@ void tnh_derivative(Value* val1, Value* out) {
 	val1->local_derivative = (1 - pow(out->data,2));
 }
 
-void _backward(Value* val, double out_grad) {
-	val->grad += val->local_derivative * out_grad;
-
-	if(val->prev[0]) {
-		if(unary(val->op)) {
-			_backward(val->prev[0], val->grad);
-		}
-		else {
-			_backward(val->prev[0], val->grad);
-			_backward(val->prev[1], val->grad);
-		}
-	}
+ValueList* init_list() {
+	ValueList* list = (ValueList*)malloc(sizeof(ValueList));
+	list->array_size = 8;
+	list->quantity = 0;
+	
+	list->values = (Value**)malloc(sizeof(ValueList*) * list->array_size);
+	return list;
 }
+
+void add_value(ValueList* list, Value* value) {
+	if(list->quantity == list->array_size) {
+		list->array_size += list->array_size / 2;
+		list->values = (Value**) realloc(list->values, sizeof(Value*) * list->array_size);
+	}
+	list->values[list->quantity] = value;
+	list->quantity++;
+}
+
+ValueList* build_topo(Value* val) {
+	ValueList* list = init_list();
+
+	void _build_topo(Value* val, ValueList* list) {
+		if(!val->visited) {
+			val->visited = true;
+
+			if(val->prev[0]) {
+				if(unary(val->op)) {
+					_build_topo(val->prev[0], list);
+				}
+				else {
+					_build_topo(val->prev[0], list);
+					_build_topo(val->prev[1], list);
+				}
+			}
+
+			add_value(list, val);
+		}
+		
+	}
+
+	_build_topo(val, list);
+	return list;
+}
+
+void _backward(Value* val) {
+	val->grad += val->local_derivative * val->out->grad;
+}
+
 void backward(Value* val) {
+	ValueList* topo_list = build_topo(val);
+
+	// update gradient
 	val->grad = 1;
-	if(unary(val->op)) {
-		_backward(val->prev[0], 1);
+	for(int i = topo_list->quantity-1-1; i > 0; i--) {
+		_backward(topo_list->values[i]);
+		topo_list->values[i]->visited = false;
 	}
-	else {
-		_backward(val->prev[0], 1);
-		_backward(val->prev[1], 1);
-	}
+	
+	// free topo array
+	free(topo_list->values);
+	free(topo_list);
 }

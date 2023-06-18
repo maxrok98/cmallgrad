@@ -21,13 +21,25 @@ typedef struct Value {
 	double data;
 	double grad;
 	double local_derivative;
-	struct Value* prev[2];
+
 	Op op;
+
+	struct Value* prev[2];
+	struct Value* out;
+
+	bool visited; // for topological order
 
 	//debug info
 	char* name;
 	bool leaf;
 } Value;
+
+typedef struct ValueList {
+	Value** values;
+	int quantity;
+	
+	int array_size;
+} ValueList;
 
 bool unary(Op op);
 Value* value(double val);
@@ -36,6 +48,7 @@ Value* min(Value* val1, Value* val2);
 Value* mul(Value* val1, Value* val2);
 Value* dv(Value* val1, Value* val2);
 Value* tnh(Value* val1);
+Value* neg(Value* val1);
 
 void backward(Value* val);
 
