@@ -33,24 +33,15 @@ Value* value(double val) {
 }
 
 void set_unary_op(Value* val1, Value* out, Op op) {
-	unary_derivative[op](val1, out);
-
 	out->prev[0] = val1;
-
-	val1->out = out;
 
 	out->op = op;
 	out->leaf = false;
 }
 
 void set_binary_op(Value* val1, Value* val2, Value* out, Op op) {
-	binary_derivative[op](val1, val2, out);
-
 	out->prev[0] = val1;
 	out->prev[1] = val2;
-
-	val1->out = out;
-	val2->out = out;
 
 	out->op = op;
 	out->leaf = false;
@@ -64,20 +55,8 @@ Value* add(Value* val1, Value* val2) {
 }
 
 void add_derivative(Value* val1, Value* val2, Value* out) {
-	val1->local_derivative = 1;
-	val2->local_derivative = 1;
-}
-
-Value* min(Value* val1, Value* val2) {
-	Value* out = value(val1->data - val2->data);
-	set_binary_op(val1, val2, out, OP_SUB);
-
-	return out;
-}
-
-void min_derivative(Value* val1, Value* val2, Value* out) {
-	val1->local_derivative = 1;
-	val2->local_derivative = 1;
+	val1->grad += 1 * out->grad;
+	val2->grad += 1 * out->grad;
 }
 
 Value* mul(Value* val1, Value* val2) {
@@ -88,8 +67,8 @@ Value* mul(Value* val1, Value* val2) {
 }
 
 void mul_derivative(Value* val1, Value* val2, Value* out) {
-	val1->local_derivative = val2->data;
-	val2->local_derivative = val1->data;
+	val1->grad += val2->data * out->grad;
+	val2->grad += val1->data * out->grad;
 }
 
 // tanh
@@ -101,7 +80,7 @@ Value* tnh(Value* val1) {
 }
 
 void tnh_derivative(Value* val1, Value* out) {
-	val1->local_derivative = (1 - pow(out->data,2));
+	val1->grad += (1 - pow(out->data,2)) * out->grad;
 }
 
 // pow
@@ -113,7 +92,7 @@ Value* pw(Value* val1, Value* val2) {
 }
 
 void pw_derivative(Value* val1, Value* val2, Value* out) {
-	val1->local_derivative = val2->data * pow(val1->data, (val2->data - 1)) * out->data;
+	val1->grad += val2->data * pow(val1->data, (val2->data - 1)) * out->grad;
 }
 
 // following operation described in terms of higher ones
@@ -146,6 +125,7 @@ void add_value(ValueList* list, Value* value) {
 		list->array_size += list->array_size / 2;
 		list->values = (Value**) realloc(list->values, sizeof(Value*) * list->array_size);
 	}
+	value->topo_number = list->quantity; // TODO: remove
 	list->values[list->quantity] = value;
 	list->quantity++;
 }
@@ -176,8 +156,19 @@ ValueList* build_topo(Value* val) {
 	return list;
 }
 
+//  backward should set grad for each of its childrend
 void _backward(Value* val) {
-	val->grad += val->local_derivative * val->out->grad;
+	// local_derivative can not be struct field because it can be different for each object
+	// 
+	if(val->prev[0]) {
+		if(unary(val->op)) {
+			unary_derivative[val->op](val->prev[0], val);
+		}
+		else {
+			binary_derivative[val->op](val->prev[0], val->prev[1], val);
+		}
+	}
+	
 }
 
 void backward(Value* val) {
@@ -185,7 +176,10 @@ void backward(Value* val) {
 
 	// update gradient
 	val->grad = 1;
-	for(int i = topo_list->quantity-1-1; i > 0; i--) {
+	for(int i = topo_list->quantity-1; i >= 0; i--) {
+		//if(topo_list->values[i]->out->grad == 0.0)
+		//_backward(topo_list->values[i]);
+		//else
 		_backward(topo_list->values[i]);
 		topo_list->values[i]->visited = false;
 	}

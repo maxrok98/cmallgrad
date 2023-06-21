@@ -1,4 +1,4 @@
-CS=engine.c utils.c
+CS=engine.c nn.c utils.c
 CFLAGS=-Wall -ggdb
 CLINK=-lm
 CC=gcc

@@ -21,18 +21,18 @@ typedef enum Op {
 typedef struct Value {
 	double data;
 	double grad;
-	double local_derivative;
 
 	Op op;
 
 	struct Value* prev[2];
-	struct Value* out;
 
+	bool weight;
 	bool visited; // for topological order
 
 	//debug info
 	char* name;
 	bool leaf;
+	int topo_number;
 } Value;
 
 typedef struct ValueList {

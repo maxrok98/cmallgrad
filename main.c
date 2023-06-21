@@ -3,8 +3,10 @@
 #include <math.h>
 #include <stdbool.h>
 #include <string.h>
+#include <time.h>
 
 #include "engine.h"
+#include "nn.h"
 #include "utils.h"
 
 void neuron() {
@@ -74,7 +76,50 @@ void equation() {
 
 
 int main() {
-	neuron();
+	srand(time(NULL));
+
+	//neuron();
+
+	double xs[4][3] = {
+		{2, 3, -1},
+		{3, -1, 0.5},
+		{0.5, 1, 1},
+		{1, 1, -1}
+	};
+
+	double ys[] = {1, -1, -1, 1};
+
+	int l[] = {3, 4, 4, 1};
+	MLP* mlp = mlp_init(l, 4);
+
+	// loop
+	int epochs = 100;
+	for(int l = 0; l < epochs; l++) {
+		zero_grad(mlp);
+
+		// mean square error
+		Value* loss = pw(sub(call_mlp(mlp, xs[0])[0], value(ys[0])), value(2));
+		for(int i = 1; i < 4; i++) {
+			loss = add(loss, pw(sub(call_mlp(mlp, xs[i])[0], value(ys[i])), value(2)));
+		}
+
+		printf("loss%i: %f\n", l, loss->data);
+
+		//printf("y0: %f\n", call_mlp(mlp, xs[0])[0]->data);
+		//printf("y1: %f\n", call_mlp(mlp, xs[1])[0]->data);
+		//printf("y2: %f\n", call_mlp(mlp, xs[2])[0]->data);
+		//printf("y3: %f\n", call_mlp(mlp, xs[3])[0]->data);
+
+		backward(loss);
+
+		step_optimize(mlp, 0.05);
+
+		// TODO: free graph
+	}
+	printf("y0: %f\n", call_mlp(mlp, xs[0])[0]->data);
+	printf("y1: %f\n", call_mlp(mlp, xs[1])[0]->data);
+	printf("y2: %f\n", call_mlp(mlp, xs[2])[0]->data);
+	printf("y3: %f\n", call_mlp(mlp, xs[3])[0]->data);
 
 	return 0;
 }
