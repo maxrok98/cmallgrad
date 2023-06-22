@@ -5,7 +5,7 @@
 #include "nn.h"
 
 double randfrom(double min, double max) {
-    double range = (max - min); 
+    double range = (max - min);
     double div = RAND_MAX / range;
     return min + (rand() / div);
 }
@@ -33,7 +33,7 @@ Layer* layer_init(int nin, int nout) {
 	for(int i = 0; i < nout; i++) {
 		layer->neurons[i] = neuron_init(nin);
 	}
-	
+
 	return layer;
 }
 
@@ -63,7 +63,7 @@ Value** call_layer(Layer* layer, Value* xs[]) {
 	for(int i = 0; i < layer->n; i++) {
 		layer_results[i] = call_neuron(layer->neurons[i], xs);
 	}
-	
+
 	return layer_results;
 }
 
@@ -103,10 +103,8 @@ void step_optimize(MLP* mlp, double step) {
 		for(int j = 0; j < layer->n; j++) {
 			Neuron* neuron = layer->neurons[j];
 			for(int k = 0; k < neuron->nw; k++) {
-				//printf("%f grad:%f|", neuron->w[k]->data, neuron->w[k]->grad);
 				neuron->w[k]->data += step * (-neuron->w[k]->grad);
 			}
-			//printf("%f grad:%f|\n", neuron->b->data, neuron->b->grad);
 			neuron->b->data += step * (-neuron->b->grad);
 		}
 	}

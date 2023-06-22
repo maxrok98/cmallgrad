@@ -40,9 +40,9 @@ void neuron() {
 }
 
 void equation() {
-	Value* a = value(2); a->name = "a";	
-	Value* b = value(-3); b->name = "b";	
-	Value* c = value(10); c->name = "c";	
+	Value* a = value(2); a->name = "a";
+	Value* b = value(-3); b->name = "b";
+	Value* c = value(10); c->name = "c";
 
 	Value* e = mul(a, b); e->name = "e";
 	Value* d = add(e, c); d->name = "d";
@@ -58,9 +58,9 @@ void equation() {
 	{
 		double h = 0.00001;
 
-		Value* a = value(2); a->name = "a";	
-		Value* b = value(-3); b->name = "b";	
-		Value* c = value(10); c->name = "c";	
+		Value* a = value(2); a->name = "a";
+		Value* b = value(-3); b->name = "b";
+		Value* c = value(10); c->name = "c";
 
 		Value* e = mul(a, b); e->name = "e";
 		Value* d = add(e, c); d->name = "d";
@@ -93,29 +93,29 @@ int main() {
 	MLP* mlp = mlp_init(l, 4);
 
 	// loop
-	int epochs = 100;
+	int epochs = 30;
 	for(int l = 0; l < epochs; l++) {
-		zero_grad(mlp);
-
 		// mean square error
-		Value* loss = pw(sub(call_mlp(mlp, xs[0])[0], value(ys[0])), value(2));
+		Value** ys_pred = call_mlp(mlp, xs[0]);
+		Value* loss = pw(sub(ys_pred[0], value(ys[0])), value(2));
+		free(ys_pred);
 		for(int i = 1; i < 4; i++) {
-			loss = add(loss, pw(sub(call_mlp(mlp, xs[i])[0], value(ys[i])), value(2)));
+			ys_pred = call_mlp(mlp, xs[i]);
+			loss = add(loss, pw(sub(ys_pred[0], value(ys[i])), value(2)));
+
+			// only array of pointers to predicted values are freed
+			free(ys_pred);
 		}
 
 		printf("loss%i: %f\n", l, loss->data);
 
-		//printf("y0: %f\n", call_mlp(mlp, xs[0])[0]->data);
-		//printf("y1: %f\n", call_mlp(mlp, xs[1])[0]->data);
-		//printf("y2: %f\n", call_mlp(mlp, xs[2])[0]->data);
-		//printf("y3: %f\n", call_mlp(mlp, xs[3])[0]->data);
+		zero_grad(mlp);
 
 		backward(loss);
 
 		step_optimize(mlp, 0.05);
-
-		// TODO: free graph
 	}
+
 	printf("y0: %f\n", call_mlp(mlp, xs[0])[0]->data);
 	printf("y1: %f\n", call_mlp(mlp, xs[1])[0]->data);
 	printf("y2: %f\n", call_mlp(mlp, xs[2])[0]->data);

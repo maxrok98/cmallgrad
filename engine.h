@@ -38,7 +38,7 @@ typedef struct Value {
 typedef struct ValueList {
 	Value** values;
 	int quantity;
-	
+
 	int array_size;
 } ValueList;
 
@@ -53,5 +53,6 @@ Value* tnh(Value* val1);
 Value* neg(Value* val1);
 
 void backward(Value* val);
+void free_graph(Value* val);
 
 #endif

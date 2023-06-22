@@ -6,9 +6,7 @@
 void tnh_derivative(Value* val1, Value* out);
 
 void add_derivative(Value* val1, Value* val2, Value* out);
-void sub_derivative(Value* val1, Value* val2, Value* out);
 void mul_derivative(Value* val1, Value* val2, Value* out);
-void div_derivative(Value* val1, Value* val2, Value* out);
 void pw_derivative(Value* val1, Value* val2, Value* out);
 
 void (*unary_derivative[UNARY_LAST])(Value*, Value*) = {
@@ -115,7 +113,7 @@ ValueList* init_list() {
 	ValueList* list = (ValueList*)malloc(sizeof(ValueList));
 	list->array_size = 8;
 	list->quantity = 0;
-	
+
 	list->values = (Value**)malloc(sizeof(ValueList*) * list->array_size);
 	return list;
 }
@@ -125,7 +123,6 @@ void add_value(ValueList* list, Value* value) {
 		list->array_size += list->array_size / 2;
 		list->values = (Value**) realloc(list->values, sizeof(Value*) * list->array_size);
 	}
-	value->topo_number = list->quantity; // TODO: remove
 	list->values[list->quantity] = value;
 	list->quantity++;
 }
@@ -149,7 +146,6 @@ ValueList* build_topo(Value* val) {
 
 			add_value(list, val);
 		}
-		
 	}
 
 	_build_topo(val, list);
@@ -159,7 +155,7 @@ ValueList* build_topo(Value* val) {
 //  backward should set grad for each of its childrend
 void _backward(Value* val) {
 	// local_derivative can not be struct field because it can be different for each object
-	// 
+	//
 	if(val->prev[0]) {
 		if(unary(val->op)) {
 			unary_derivative[val->op](val->prev[0], val);
@@ -168,7 +164,7 @@ void _backward(Value* val) {
 			binary_derivative[val->op](val->prev[0], val->prev[1], val);
 		}
 	}
-	
+
 }
 
 void backward(Value* val) {
@@ -183,7 +179,13 @@ void backward(Value* val) {
 		_backward(topo_list->values[i]);
 		topo_list->values[i]->visited = false;
 	}
-	
+
+	// for memory efficiency all nodes except weights are freed
+	// since topo list already present in a scope
+	for(int i = 0; i < topo_list->quantity; i++) {
+		if(!topo_list->values[i]->weight) free(topo_list->values[i]);
+	}
+
 	// free topo array
 	free(topo_list->values);
 	free(topo_list);
