@@ -32,7 +32,6 @@ typedef struct Value {
 	//debug info
 	char* name;
 	bool leaf;
-	int topo_number;
 } Value;
 
 typedef struct ValueList {
@@ -53,6 +52,5 @@ Value* tnh(Value* val1);
 Value* neg(Value* val1);
 
 void backward(Value* val);
-void free_graph(Value* val);
 
 #endif
